@@ -53,8 +53,8 @@ void loop() {
 
   actualHour = now.hour();
   actualMinute = now.minute();
-  appointementHour = 20;
-  appointementMinute = 03;
+  appointementHour = 11;
+  appointementMinute = 45;
 
   if(actualHour == appointementHour && actualMinute == appointementMinute){
     rainbow(10);
