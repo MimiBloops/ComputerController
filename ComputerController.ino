@@ -2,6 +2,7 @@
 #include <Keyboard.h>
 #include <Adafruit_NeoPixel.h>
 #include "RTClib.h"
+#include <TaskScheduler.h>
 
 #define buttonPlayPin 2
 #define buttonPreviousPin 4
@@ -20,15 +21,49 @@ char windowsKey = KEY_LEFT_GUI;
 RTC_DS3231 rtc;
 Adafruit_NeoPixel strip(ledCount, ringPin, NEO_GRB + NEO_KHZ800);
 
-DateTime now;
+void setTimeCallback();
+void runRingCallback();
+void playPauseCallback();
+void previousCallback();
+void nextCallback();
+void windowsLockCallback();
+
+Scheduler s;
+Task tSetTime(TASK_SECOND, TASK_FOREVER, &setTimeCallback, &s, true);
+
+DateTime actual;
 int actualHour;
 int actualMinute;
 int appointementHour;
 int appointementMinute;
 
+int buttonPlayVal;
+int buttonPreviousVal;
+int buttonNextVal;
+int buttonWindowsVal;
+
+void setTimeCallback(){
+  actual = rtc.now();
+
+  actualHour = actual.hour();
+  actualMinute = actual.minute();
+
+  if(actualHour == appointementHour && actualMinute == appointementMinute){
+    runRing();
+  }
+
+  colorWipe(strip.Color(0,0,0),50);
+}
+
+void runRing(){
+  rainbow(10);
+  theaterChase(strip.Color(127, 127, 127), 50);
+  theaterChase(strip.Color(  0,   0, 127), 50);
+}
+
+
 void setup() {
   Serial.begin(9600);
-  // put your setup code here, to run once:
   pinMode(buttonPlayPin, INPUT_PULLUP);
   pinMode(buttonPreviousPin, INPUT_PULLUP);
   pinMode(buttonNextPin, INPUT_PULLUP);
@@ -46,34 +81,26 @@ void setup() {
   strip.begin();
   strip.show();
   strip.setBrightness(50);
+
+  
+  appointementHour = 14;
+  appointementMinute = 02;
 }
 
 void loop() {  
-  now = rtc.now();
-
-  actualHour = now.hour();
-  actualMinute = now.minute();
-  appointementHour = 11;
-  appointementMinute = 45;
-
-  if(actualHour == appointementHour && actualMinute == appointementMinute){
-    rainbow(10);
-  }
-
-  colorWipe(strip.Color(0,0,0),50);
+  s.execute();
   
-  int buttonPlayVal = digitalRead(buttonPlayPin);
-  int buttonPreviousVal = digitalRead(buttonPreviousPin);
-  int buttonNextVal = digitalRead(buttonNextPin);
-  int buttonWindowsVal = digitalRead(buttonWindowsPin);
-  //rainbow(10);
+  buttonPlayVal = digitalRead(buttonPlayPin);
+  buttonPreviousVal = digitalRead(buttonPreviousPin);
+  buttonNextVal = digitalRead(buttonNextPin);
+  buttonWindowsVal = digitalRead(buttonWindowsPin);
+  
   if(buttonPlayVal == 0){
     Keyboard.press(ctrlKey);
     Keyboard.press(altKey);
     Keyboard.press(upKey);
-    delay(100);
+    delay(20);
     Keyboard.releaseAll();
-    Serial.println("COUCOU");
   }
   if(buttonPreviousVal == 0){
     Keyboard.press(ctrlKey);
@@ -95,7 +122,7 @@ void loop() {
     delay(100);
     Keyboard.releaseAll();
   }
-  delay(200);
+  delay(50);
 }
 
 void rainbow(int wait) {
@@ -114,5 +141,18 @@ void colorWipe(uint32_t color, int wait) {
     strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
     strip.show();                          //  Update strip to match
     delay(wait);                           //  Pause for a moment
+  }
+}
+
+void theaterChase(uint32_t color, int wait) {
+  for(int a=0; a<10; a++) {
+    for(int b=0; b<3; b++) {
+      strip.clear();
+      for(int c=b; c<strip.numPixels(); c += 3) {
+        strip.setPixelColor(c, color);
+      }
+      strip.show();
+      delay(wait);
+    }
   }
 }
