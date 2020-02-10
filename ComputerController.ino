@@ -23,10 +23,6 @@ Adafruit_NeoPixel strip(ledCount, ringPin, NEO_GRB + NEO_KHZ800);
 
 void setTimeCallback();
 void runRingCallback();
-void playPauseCallback();
-void previousCallback();
-void nextCallback();
-void windowsLockCallback();
 
 Scheduler s;
 Task tSetTime(TASK_SECOND, TASK_FOREVER, &setTimeCallback, &s, true);
@@ -137,10 +133,10 @@ void rainbow(int wait) {
 }
 
 void colorWipe(uint32_t color, int wait) {
-  for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
-    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
-    strip.show();                          //  Update strip to match
-    delay(wait);                           //  Pause for a moment
+  for(int i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, color);
+    strip.show();
+    delay(wait);
   }
 }
 
